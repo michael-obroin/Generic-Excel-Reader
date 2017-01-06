@@ -5,8 +5,13 @@
  */
 package javaapplication1;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import org.apache.poi.*;
+import jdk.internal.util.xml.impl.Input;
 
 /**
  *
@@ -19,6 +24,10 @@ public class AttendancePayment extends javax.swing.JFrame
     /**
      * Creates new form AttendancePayment
      */
+    
+    static String inputText, filePath, chooseError;
+    static boolean fileChosen;
+            
     public AttendancePayment() 
     {
         initComponents();
@@ -33,47 +42,74 @@ public class AttendancePayment extends javax.swing.JFrame
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        inputField = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
+
+        inputField.setToolTipText("");
+        inputField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputFieldActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel1.setText("Scan ID Below");
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane1.setViewportView(jTextArea1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(inputField)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    
-    
-    public static int firstMethod() 
-    {
-        Object[] options = { "New Roster", "Existing Roster" };
-        
-        return JOptionPane.showOptionDialog(null, "New Roster or Existing?", "",
-        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        
-    }
-    
     /**
      * @param args the command line arguments
      */
     
-    public static void main(String args[]) 
+    public static void main(String args[]) throws IOException 
     {
         int result = firstMethod();
         
         System.out.println(result);
         
-        if(result == -1)
+        if(result != -1)
         {
-            
-        }
+            fileImport();
+        } else
+            System.exit(0);
         
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -103,8 +139,99 @@ public class AttendancePayment extends javax.swing.JFrame
         {
             new AttendancePayment().setVisible(true);
         });
+        
+        //ask if new roster or existing
+        //scan ID
+        //print out if they already paid or not
     }
+    
+    private void inputFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFieldActionPerformed
+        // TODO add your handling code here:
+        inputText = inputField.getText();
+        inputField.setText("");
+    }//GEN-LAST:event_inputFieldActionPerformed
 
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+        int result = JOptionPane.showConfirmDialog(null, "Exit the application?");
+        if (result == JOptionPane.OK_OPTION) 
+        {
+            System.exit(0);     
+        }
+    }//GEN-LAST:event_formWindowClosing
+
+    public static void fileImport() throws IOException
+    {   
+        //variable assignment
+        fileChosen = true;
+        chooseError = "";
+        
+        //creates filechooser with desktop as default directory
+        String userhome = System.getProperty("user.home");
+        JFileChooser chooser = new JFileChooser(userhome + "\\Desktop");
+        
+        //opens filechooser, assigns choice to status
+        int status = chooser.showOpenDialog(null);
+        File file = chooser.getSelectedFile();
+
+        //if they don't click approve, assume no file chosen
+        if (status != JFileChooser.APPROVE_OPTION)
+        {
+            //System.out.println("No File Chosen");
+            fileChosen = false;
+            chooseError = "No File Chosen";
+            confirmChoice();
+        }
+        
+        //if a file is chosen but not ending in .xls, restart
+        if(fileChosen)
+        {
+            filePath = file.getAbsolutePath();
+          
+            if(!filePath.endsWith(".xls"))
+            {
+              chooseError = "File Doesn't End with .xls";
+              confirmChoice();
+            }
+        }
+    }
+    
+    public static void confirmChoice()
+    {
+        int choice = JOptionPane.showConfirmDialog(null, "Do You want to quit?", chooseError, JOptionPane.YES_NO_OPTION);
+        
+        //only tries filechooser again if they explicitly say they don't want to quit
+        if(choice == JOptionPane.NO_OPTION)
+        {
+            try {
+                fileImport();
+            } catch (IOException ex) {
+                Logger.getLogger(Input.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } 
+    }
+    
+    public static boolean chooseExit()
+    {
+        int choice = JOptionPane.showConfirmDialog(null, "Do You want to quit?", null, JOptionPane.YES_NO_OPTION);
+        
+        //only tries again if they explicitly say they don't want to quit
+        return choice != JOptionPane.NO_OPTION;
+    }
+    
+    public static int firstMethod() 
+    {
+        Object[] options = { "New Roster", "Existing Roster" };
+        
+        return JOptionPane.showOptionDialog(null, "New Roster or Existing?", "",
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField inputField;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
 }
