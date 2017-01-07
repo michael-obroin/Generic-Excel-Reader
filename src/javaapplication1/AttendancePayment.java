@@ -293,7 +293,7 @@ public class AttendancePayment extends javax.swing.JFrame
                     e.printStackTrace();
                 }
                 
-                System.out.println(paidStatus);
+                //System.out.println(paidStatus);
                 
                 if("Y".equals(paidStatus))
                 {
