@@ -5,17 +5,25 @@
  */
 package javaapplication1;
 
+import java.awt.Color;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import jdk.internal.util.xml.impl.Input;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 
 /**
  *
- * @author Furlong
+ * @author OB
  */
 
 public class AttendancePayment extends javax.swing.JFrame 
@@ -25,9 +33,14 @@ public class AttendancePayment extends javax.swing.JFrame
      * Creates new form AttendancePayment
      */
     
-    static String inputText, filePath, chooseError;
-    static boolean fileChosen;
-            
+    private static String filePath, chooseError, addingName;
+    private static boolean fileChosen;
+    private static int idNum, numRows;
+    private static final int ID_COL = 0, NAMEFIRST_COL = 2, NAMELAST_COL = 1, PAIDSTATUS_COL = 4, GRADE_COL = 3;
+    private static FileInputStream file1;
+    private static HSSFWorkbook workbook;
+    private static HSSFSheet sheet;
+                    
     public AttendancePayment() 
     {
         initComponents();
@@ -42,10 +55,10 @@ public class AttendancePayment extends javax.swing.JFrame
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        inputField = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
+        jInputField = new javax.swing.JTextField();
+        jInputLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        jDisplayArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -54,19 +67,19 @@ public class AttendancePayment extends javax.swing.JFrame
             }
         });
 
-        inputField.setToolTipText("");
-        inputField.addActionListener(new java.awt.event.ActionListener() {
+        jInputField.setToolTipText("");
+        jInputField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputFieldActionPerformed(evt);
+                jInputFieldActionPerformed(evt);
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel1.setText("Scan ID Below");
+        jInputLabel.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jInputLabel.setText("Scan ID Below");
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
+        jDisplayArea.setColumns(20);
+        jDisplayArea.setRows(5);
+        jScrollPane1.setViewportView(jDisplayArea);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -74,9 +87,9 @@ public class AttendancePayment extends javax.swing.JFrame
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(inputField)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jInputField)
+                    .addComponent(jInputLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -84,10 +97,10 @@ public class AttendancePayment extends javax.swing.JFrame
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
+                .addComponent(jInputLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jInputField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -102,16 +115,6 @@ public class AttendancePayment extends javax.swing.JFrame
     
     public static void main(String args[]) throws IOException 
     {
-        int result = firstMethod();
-        
-        System.out.println(result);
-        
-        if(result != -1)
-        {
-            fileImport();
-        } else
-            System.exit(0);
-        
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -129,24 +132,46 @@ public class AttendancePayment extends javax.swing.JFrame
         }
         //</editor-fold>
         
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> 
-        {
-            new AttendancePayment().setVisible(true);
-        });
+        int newOrOld = firstMethod();
         
-        //ask if new roster or existing
-        //scan ID
-        //print out if they already paid or not
+        //System.out.println(newOrOld);
+        
+        //exit is -1
+        //new roster is 0
+        //existing roster is 1
+        
+        if(newOrOld != -1)
+        {
+            fileImport();
+
+            //</editor-fold>
+
+            //if new roster is selected, overwrites the paidstatus column with N
+            if(newOrOld == 0)
+            {
+                for(Row row : sheet)
+                {
+                    Cell paymentCell = row.createCell(PAIDSTATUS_COL);
+                    paymentCell.setCellValue("N");
+                }
+            }
+            /* Create and display the form */
+            java.awt.EventQueue.invokeLater(() -> {
+                new AttendancePayment().setVisible(true);
+            });
+        } else
+            System.exit(0);
+        
     }
     
-    private void inputFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFieldActionPerformed
+    private void jInputFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jInputFieldActionPerformed
         // TODO add your handling code here:
-        inputText = inputField.getText();
-        inputField.setText("");
-    }//GEN-LAST:event_inputFieldActionPerformed
+        try {
+            checkName();
+        } catch (IOException ex) {
+            Logger.getLogger(AttendancePayment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jInputFieldActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
@@ -157,7 +182,7 @@ public class AttendancePayment extends javax.swing.JFrame
         }
     }//GEN-LAST:event_formWindowClosing
 
-    public static void fileImport() throws IOException
+    private static void fileImport() throws IOException
     {   
         //variable assignment
         fileChosen = true;
@@ -191,9 +216,19 @@ public class AttendancePayment extends javax.swing.JFrame
               confirmChoice();
             }
         }
+        
+        //start of reading excel file
+        file1 = new FileInputStream(new File(filePath));
+        
+        workbook = new HSSFWorkbook(file1);
+        sheet = workbook.getSheetAt(0);
+        
+        numRows = sheet.getPhysicalNumberOfRows();
+        
+        
     }
     
-    public static void confirmChoice()
+    private static void confirmChoice()
     {
         int choice = JOptionPane.showConfirmDialog(null, "Do You want to quit?", chooseError, JOptionPane.YES_NO_OPTION);
         
@@ -205,10 +240,11 @@ public class AttendancePayment extends javax.swing.JFrame
             } catch (IOException ex) {
                 Logger.getLogger(Input.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } 
+        } else
+            System.exit(0);
     }
     
-    public static boolean chooseExit()
+    private static boolean chooseExit()
     {
         int choice = JOptionPane.showConfirmDialog(null, "Do You want to quit?", null, JOptionPane.YES_NO_OPTION);
         
@@ -216,7 +252,7 @@ public class AttendancePayment extends javax.swing.JFrame
         return choice != JOptionPane.NO_OPTION;
     }
     
-    public static int firstMethod() 
+    private static int firstMethod() 
     {
         Object[] options = { "New Roster", "Existing Roster" };
         
@@ -225,10 +261,61 @@ public class AttendancePayment extends javax.swing.JFrame
         
     }
     
+    private static void checkName() throws FileNotFoundException, IOException
+    {
+        //stores the input from the formatted text field
+        idNum = Integer.parseInt(jInputField.getText());
+        
+        //clears the input field
+        jInputField.setText("");
+        
+        //System.out.println(idNum);
+        
+        for (Row row : sheet)
+        {
+            Cell cell1 = row.getCell(ID_COL);
+            
+            if((int)cell1.getNumericCellValue() == idNum)
+            {
+                String paidStatus = null;
+                //foundID = true;
+                Cell lastName = row.getCell(NAMELAST_COL);
+                Cell firstName = row.getCell(NAMEFIRST_COL);
+                Cell grade = row.getCell(GRADE_COL);
+                
+                addingName = (int)grade.getNumericCellValue() + "    " + lastName.getStringCellValue() + " " + firstName.getStringCellValue();
+                
+                
+                try{
+                    paidStatus = row.getCell(PAIDSTATUS_COL).toString();
+                } catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+                
+                System.out.println(paidStatus);
+                
+                if("Y".equals(paidStatus))
+                {
+                    jDisplayArea.setText(addingName + "\n \n" + "Is already paid for");
+                    jDisplayArea.setBackground(Color.red);
+                } else {
+                    row.getCell(PAIDSTATUS_COL).setCellValue("Y");
+                    jDisplayArea.setText("Everything Worked");
+                    jDisplayArea.setBackground(Color.green);
+                }
+                try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+                    workbook.write(fileOut);
+                }
+                
+            }
+        }
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextField inputField;
-    private javax.swing.JLabel jLabel1;
+    private static javax.swing.JTextArea jDisplayArea;
+    private static javax.swing.JTextField jInputField;
+    private static javax.swing.JLabel jInputLabel;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
 }
