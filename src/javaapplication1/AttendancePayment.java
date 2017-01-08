@@ -35,7 +35,7 @@ public class AttendancePayment extends javax.swing.JFrame
     
     private static String filePath, chooseError, addingName;
     private static boolean fileChosen;
-    private static int idNum, numRows;
+    private static int idNum;
     private static final int ID_COL = 0, NAMEFIRST_COL = 2, NAMELAST_COL = 1, PAIDSTATUS_COL = 4, GRADE_COL = 3;
     private static FileInputStream file1;
     private static HSSFWorkbook workbook;
@@ -132,7 +132,7 @@ public class AttendancePayment extends javax.swing.JFrame
         }
         //</editor-fold>
         
-        int newOrOld = firstMethod();
+        int newOrOld = newOrExisting();
         
         //System.out.println(newOrOld);
         
@@ -142,23 +142,43 @@ public class AttendancePayment extends javax.swing.JFrame
         
         if(newOrOld != -1)
         {
-            fileImport();
-
             //</editor-fold>
 
             //if new roster is selected, overwrites the paidstatus column with N
             if(newOrOld == 0)
             {
-                for(Row row : sheet)
+                Object[] options = { "Yes I'm Sure", "No, Use an existing roster" };
+
+                //Yes I'm sure = 0
+                //No, use existing = 1
+                int newOldChoice = JOptionPane.showOptionDialog(null, "Only do this if this is the first time this is being run for the event", "",
+                JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+                
+                //System.out.println(newOldChoice);
+                
+                if(newOldChoice == -1)
                 {
+                    confirmChoice();
+                }
+                
+                fileImport();
+                
+                if(newOldChoice == 0)
+                {
+                    for(Row row : sheet)
+                    {
                     Cell paymentCell = row.createCell(PAIDSTATUS_COL);
                     paymentCell.setCellValue("N");
+                    }
                 }
-            }
+            } else
+                fileImport();
+            
             /* Create and display the form */
             java.awt.EventQueue.invokeLater(() -> {
                 new AttendancePayment().setVisible(true);
             });
+            
         } else
             System.exit(0);
         
@@ -217,16 +237,11 @@ public class AttendancePayment extends javax.swing.JFrame
             }
         }
         
-        //start of reading excel file
+        //creates excel objects
         file1 = new FileInputStream(new File(filePath));
-        
         workbook = new HSSFWorkbook(file1);
         sheet = workbook.getSheetAt(0);
-        
-        numRows = sheet.getPhysicalNumberOfRows();
-        
-        
-    }
+        }
     
     private static void confirmChoice()
     {
@@ -243,16 +258,8 @@ public class AttendancePayment extends javax.swing.JFrame
         } else
             System.exit(0);
     }
-    
-    private static boolean chooseExit()
-    {
-        int choice = JOptionPane.showConfirmDialog(null, "Do You want to quit?", null, JOptionPane.YES_NO_OPTION);
-        
-        //only tries again if they explicitly say they don't want to quit
-        return choice != JOptionPane.NO_OPTION;
-    }
-    
-    private static int firstMethod() 
+
+    private static int newOrExisting() 
     {
         Object[] options = { "New Roster", "Existing Roster" };
         
@@ -284,7 +291,6 @@ public class AttendancePayment extends javax.swing.JFrame
                 Cell grade = row.getCell(GRADE_COL);
                 
                 addingName = (int)grade.getNumericCellValue() + "    " + lastName.getStringCellValue() + " " + firstName.getStringCellValue();
-                
                 
                 try{
                     paidStatus = row.getCell(PAIDSTATUS_COL).toString();
