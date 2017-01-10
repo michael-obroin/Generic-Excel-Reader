@@ -15,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import jdk.internal.util.xml.impl.Input;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -252,7 +251,6 @@ public class AttendancePayment extends javax.swing.JFrame
             try {
                 fileImport();
             } catch (IOException ex) {
-                Logger.getLogger(Input.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else
             System.exit(0);
