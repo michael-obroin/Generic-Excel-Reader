@@ -32,7 +32,6 @@ public class AttendancePayment extends javax.swing.JFrame
     /**
      * Creates new form AttendancePayment
      */
-    
     private static String filePath, chooseError, addingName;
     private static boolean fileChosen;
     private static int idNum;
